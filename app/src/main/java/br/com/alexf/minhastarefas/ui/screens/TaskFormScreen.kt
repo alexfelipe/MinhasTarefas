@@ -26,7 +26,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -45,51 +48,57 @@ fun TaskFormScreen(
     modifier: Modifier = Modifier,
     onSaveClick: () -> Unit,
     onDeleteClick: () -> Unit,
+    onDescriptionChange: (String) -> Unit,
+    onTitleChange: (String) -> Unit,
+    onDueDateChange: (Long?) -> Unit
 ) {
+
     val datePickerState = rememberDatePickerState()
-    AnimatedVisibility(uiState.showDatePicker) {
-        DatePickerDialog(onDismissRequest = {
-            uiState.isShowDatePickerChange(false)
-        }, confirmButton = {
-            Button(onClick = {
-                uiState.onDueDateChange(
-                    datePickerState.selectedDateMillis
-                )
-                uiState.isShowDatePickerChange(false)
-            }) {
-                Text("Selecionar")
-            }
-        }) {
-            DatePicker(datePickerState)
-        }
+
+    var isDatePickerOpen by remember { mutableStateOf(false) }
+
+    var isDeleteEnabled by remember { mutableStateOf(true) }
+
+    AnimatedVisibility(isDatePickerOpen) {
+        DatePickerDialog(
+            onDismissRequest = { isDatePickerOpen = false },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDueDateChange(datePickerState.selectedDateMillis)
+                        isDatePickerOpen = false
+                    }
+                ) {
+                    Text("Selecionar")
+                }
+            },
+            content = { DatePicker(datePickerState) }
+        )
     }
+
     Column(modifier) {
-        val topAppBarTitle = uiState.topAppBarTitle
-        val deleteEnabled = uiState.isDeleteEnabled
         TopAppBar(
             title = {
                 Text(
-                    text = topAppBarTitle,
+                    text = uiState.topAppBarTitle,
                     fontSize = 20.sp,
                 )
             },
             actions = {
-                if (deleteEnabled) {
+                if (isDeleteEnabled) {
                     Icon(
-                        Icons.Filled.Delete,
+                        imageVector = Icons.Filled.Delete,
                         contentDescription = "Delete task icon",
-                        Modifier
+                        modifier = Modifier
                             .clip(CircleShape)
-                            .clickable {
-                                onDeleteClick()
-                            }
+                            .clickable { onDeleteClick() }
                             .padding(4.dp)
                     )
                 }
                 Icon(
-                    Icons.Filled.Done,
+                    imageVector = Icons.Filled.Done,
                     contentDescription = "Save task icon",
-                    Modifier
+                    modifier = Modifier
                         .clip(CircleShape)
                         .clickable {
                             onSaveClick()
@@ -101,9 +110,9 @@ fun TaskFormScreen(
         )
         Spacer(modifier = Modifier.size(8.dp))
         OutlinedTextField(
-            uiState.dueDate ?: "",
+            value = uiState.dueDate ?: "",
             onValueChange = {},
-            Modifier
+            modifier = Modifier
                 .padding(8.dp)
                 .fillMaxWidth(),
             label = {
@@ -117,25 +126,25 @@ fun TaskFormScreen(
                     it.interactions.collectLatest { interaction ->
                         when (interaction) {
                             is PressInteraction.Release -> {
-                                uiState.isShowDatePickerChange(true)
+                                isDatePickerOpen = true
                             }
                         }
                     }
                 }
             }
         )
-        val title = uiState.title
-        val description = uiState.description
+
         val titleFontStyle = TextStyle.Default.copy(fontSize = 24.sp)
         val descriptionFontStyle = TextStyle.Default.copy(fontSize = 18.sp)
+
         BasicTextField(
-            value = title,
-            onValueChange = uiState.onTitleChange,
+            value = uiState.title,
+            onValueChange = onTitleChange,
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             decorationBox = { innerTextField ->
-                if (title.isEmpty()) {
+                if (uiState.title.isEmpty()) {
                     Text(
                         text = "Title",
                         style = titleFontStyle.copy(
@@ -149,13 +158,13 @@ fun TaskFormScreen(
         )
         Spacer(modifier = Modifier.size(16.dp))
         BasicTextField(
-            value = description, onValueChange = uiState.onDescriptionChange,
+            value = uiState.description, onValueChange = onDescriptionChange,
             Modifier
                 .fillMaxWidth()
                 .weight(1f)
                 .padding(horizontal = 16.dp),
             decorationBox = { innerTextField ->
-                if (description.isEmpty()) {
+                if (uiState.description.isEmpty()) {
                     Text(
                         text = "Description",
                         style = descriptionFontStyle
@@ -181,7 +190,10 @@ fun TaskFormScreenPreview() {
                 topAppBarTitle = "Criando tarefa"
             ),
             onSaveClick = {},
-            onDeleteClick = {}
+            onDeleteClick = {},
+            onDescriptionChange = { },
+            onTitleChange = { },
+            onDueDateChange = { }
         )
     }
 }
@@ -193,24 +205,12 @@ fun TaskFormScreenWithEditModePreview() {
         TaskFormScreen(
             uiState = TaskFormUiState(
                 topAppBarTitle = "Editando tarefa",
-                isDeleteEnabled = true
             ),
             onSaveClick = {},
             onDeleteClick = {},
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TaskFormScreenShowingDatePickerDialogPreview() {
-    MinhasTarefasTheme {
-        TaskFormScreen(
-            uiState = TaskFormUiState(
-                showDatePicker = true
-            ),
-            onSaveClick = {},
-            onDeleteClick = {},
+            onDescriptionChange = { },
+            onTitleChange = { },
+            onDueDateChange = { }
         )
     }
 }
