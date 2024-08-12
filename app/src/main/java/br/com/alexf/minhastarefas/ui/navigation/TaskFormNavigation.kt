@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.toRoute
 import br.com.alexf.minhastarefas.models.Task
 import br.com.alexf.minhastarefas.ui.screens.TaskFormScreen
+import br.com.alexf.minhastarefas.ui.viewmodels.TaskFormEvent
 import br.com.alexf.minhastarefas.ui.viewmodels.TaskFormViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -29,17 +30,14 @@ fun NavGraphBuilder.taskFormScreen(
         val uiState by viewModel.uiState.collectAsState()
         TaskFormScreen(
             uiState = uiState,
-            onSaveClick = {
-                    viewModel.save()
+            onEvent = { event ->
+                if (event == TaskFormEvent.OnDelete || event == TaskFormEvent.OnSave ) {
+                    viewModel.onEvent(event)
                     onPopBackStack()
-            },
-            onDeleteClick = {
-                    viewModel.delete()
-                    onPopBackStack()
-            },
-            onTitleChange = viewModel::onTitleChange,
-            onDescriptionChange = viewModel::onDescriptionChange,
-            onDueDateChange = viewModel::onDuoDateChange
+                } else {
+                    viewModel.onEvent(event)
+                }
+            }
         )
     }
 }
