@@ -24,22 +24,23 @@ fun NavGraphBuilder.taskFormScreen(
 ) {
     composable<TaskFormRoute> { backStackEntry ->
         val taskId = backStackEntry.toRoute<TaskFormRoute>().taskId
+        val scope = rememberCoroutineScope()
         val viewModel = koinViewModel<TaskFormViewModel>(
             parameters = { parametersOf(taskId) })
         val uiState by viewModel.uiState.collectAsState()
         TaskFormScreen(
             uiState = uiState,
             onSaveClick = {
+                scope.launch {
                     viewModel.save()
                     onPopBackStack()
+                }
             },
             onDeleteClick = {
+                scope.launch {
                     viewModel.delete()
                     onPopBackStack()
-            },
-            onTitleChange = viewModel::onTitleChange,
-            onDescriptionChange = viewModel::onDescriptionChange,
-            onDueDateChange = viewModel::onDuoDateChange
-        )
+                }
+            })
     }
 }
