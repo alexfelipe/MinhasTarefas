@@ -39,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.alexf.minhastarefas.ui.states.TaskFormUiState
 import br.com.alexf.minhastarefas.ui.theme.MinhasTarefasTheme
-import br.com.alexf.minhastarefas.ui.viewmodels.TaskFormEvent
 import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,7 +46,11 @@ import kotlinx.coroutines.flow.collectLatest
 fun TaskFormScreen(
     uiState: TaskFormUiState,
     modifier: Modifier = Modifier,
-    onEvent: (TaskFormEvent) -> Unit
+    onSaveClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onDescriptionChange: (String) -> Unit,
+    onTitleChange: (String) -> Unit,
+    onDueDateChange: (Long?) -> Unit
 ) {
 
     val datePickerState = rememberDatePickerState()
@@ -62,9 +65,7 @@ fun TaskFormScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        onEvent(
-                            TaskFormEvent.OnDueDateChange(datePickerState.selectedDateMillis)
-                        )
+                        onDueDateChange(datePickerState.selectedDateMillis)
                         isDatePickerOpen = false
                     }
                 ) {
@@ -90,7 +91,7 @@ fun TaskFormScreen(
                         contentDescription = "Delete task icon",
                         modifier = Modifier
                             .clip(CircleShape)
-                            .clickable { onEvent(TaskFormEvent.OnDelete) }
+                            .clickable { onDeleteClick() }
                             .padding(4.dp)
                     )
                 }
@@ -99,7 +100,9 @@ fun TaskFormScreen(
                     contentDescription = "Save task icon",
                     modifier = Modifier
                         .clip(CircleShape)
-                        .clickable { onEvent(TaskFormEvent.OnSave) }
+                        .clickable {
+                            onSaveClick()
+                        }
                         .padding(4.dp)
                 )
             },
@@ -136,7 +139,7 @@ fun TaskFormScreen(
 
         BasicTextField(
             value = uiState.title,
-            onValueChange = { value -> onEvent(TaskFormEvent.OnTitleChange(value)) },
+            onValueChange = onTitleChange,
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
@@ -155,7 +158,7 @@ fun TaskFormScreen(
         )
         Spacer(modifier = Modifier.size(16.dp))
         BasicTextField(
-            value = uiState.description, onValueChange = { value -> onEvent(TaskFormEvent.OnDescriptionChange(value)) },
+            value = uiState.description, onValueChange = onDescriptionChange,
             Modifier
                 .fillMaxWidth()
                 .weight(1f)
@@ -186,7 +189,11 @@ fun TaskFormScreenPreview() {
             uiState = TaskFormUiState(
                 topAppBarTitle = "Criando tarefa"
             ),
-            onEvent = { }
+            onSaveClick = {},
+            onDeleteClick = {},
+            onDescriptionChange = { },
+            onTitleChange = { },
+            onDueDateChange = { }
         )
     }
 }
@@ -199,7 +206,11 @@ fun TaskFormScreenWithEditModePreview() {
             uiState = TaskFormUiState(
                 topAppBarTitle = "Editando tarefa",
             ),
-            onEvent = { }
+            onSaveClick = {},
+            onDeleteClick = {},
+            onDescriptionChange = { },
+            onTitleChange = { },
+            onDueDateChange = { }
         )
     }
 }

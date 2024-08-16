@@ -1,5 +1,6 @@
 package br.com.alexf.minhastarefas.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,20 +10,20 @@ import br.com.alexf.minhastarefas.repositories.toTask
 import br.com.alexf.minhastarefas.ui.states.TaskFormUiState
 import br.com.alexf.minhastarefas.utils.toBrazilianDateFormat
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
+import kotlinx.datetime.format.FormatStringsInDatetimeFormats
+import kotlinx.datetime.format.byUnicodePattern
+import kotlinx.datetime.toLocalDateTime
 import java.util.UUID
-
-sealed class TaskFormEvent {
-    data class OnTitleChange(val title: String): TaskFormEvent()
-    data class OnDescriptionChange(val description: String): TaskFormEvent()
-    data class OnDueDateChange(val newDate: Long?): TaskFormEvent()
-    data object OnDelete: TaskFormEvent()
-    data object OnSave: TaskFormEvent()
-}
 
 class TaskFormViewModel(
     savedStateHandle: SavedStateHandle,
@@ -37,15 +38,6 @@ class TaskFormViewModel(
     init {
         checkTaskId()
     }
-
-    fun onEvent(event: TaskFormEvent) =
-        when(event) {
-            is TaskFormEvent.OnTitleChange -> onTitleChange(event.title)
-            is TaskFormEvent.OnDescriptionChange -> onDescriptionChange(event.description)
-            is TaskFormEvent.OnDueDateChange -> onDuoDateChange(event.newDate)
-            is TaskFormEvent.OnSave -> save()
-            is TaskFormEvent.OnDelete -> delete()
-        }
 
     private fun checkTaskId() {
         id?.let {
@@ -67,25 +59,25 @@ class TaskFormViewModel(
         }
     }
 
-    private fun onTitleChange(title: String) {
+    fun onTitleChange(title: String) {
         uiState.update {
             it.copy(title = title)
         }
     }
 
-    private fun onDescriptionChange(description: String) {
+    fun onDescriptionChange(description: String) {
         uiState.update {
             it.copy(description = description)
         }
     }
 
-    private fun onDuoDateChange(newDate: Long?) {
+    fun onDuoDateChange(newDate: Long?) {
         uiState.update {
             it.copy(dueDate = newDate.toBrazilianDateFormat())
         }
     }
 
-    private fun save() {
+    fun save() {
         viewModelScope.launch {
             with(uiState.value) {
                 repository.save(
@@ -100,7 +92,7 @@ class TaskFormViewModel(
 
     }
 
-    private fun delete() {
+    fun delete() {
         viewModelScope.launch {
             id?.let {
                 repository.delete(id)
